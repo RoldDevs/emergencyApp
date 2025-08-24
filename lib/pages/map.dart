@@ -9,6 +9,7 @@ import 'package:emergency_app/components/user_location_marker.dart';
 import 'package:emergency_app/components/emergency_notification_marker.dart';
 import 'package:emergency_app/providers/location_service.dart';
 import 'package:emergency_app/providers/map_navigation_provider.dart';
+import 'package:emergency_app/components/location_detail_modal.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -56,8 +57,23 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     width: 40.0,
                     height: 40.0,
                     point: LatLng(location.latitude, location.longitude),
-                    child: EmergencyMarker(
-                      location: location,
+                    child: GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => DraggableScrollableSheet(
+                            initialChildSize: 0.8, 
+                            minChildSize: 0.3,
+                            maxChildSize: 0.9,
+                            builder: (_, controller) => LocationDetailModal(location: location),
+                          ),
+                        );
+                      },
+                      child: EmergencyMarker(
+                        location: location,
+                      ),
                     ),
                   );
                 }).toList(),

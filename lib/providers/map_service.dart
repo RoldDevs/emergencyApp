@@ -21,6 +21,7 @@ class MapService extends StateNotifier<AsyncValue<List<EmergencyLocation>>> {
     }
   }
 
+  // Inside the MapService class methods
   Future<List<EmergencyLocation>> fetchHospitals() async {
     const String overpassQuery = '''
       [out:json];
@@ -32,38 +33,41 @@ class MapService extends StateNotifier<AsyncValue<List<EmergencyLocation>>> {
       );
       out center;
     ''';
-
+  
     final Uri url = Uri.parse("https://overpass-api.de/api/interpreter?data=$overpassQuery");
-
+  
     try {
       final response = await http.get(url);
-
+  
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<EmergencyLocation> loadedHospitals = [];
-
+  
         for (var element in data["elements"]) {
           double lat = element["lat"] ?? element["center"]?["lat"] ?? 0.0;
           double lng = element["lon"] ?? element["center"]?["lon"] ?? 0.0;
           String name = element["tags"]?["name"] ?? "Unnamed Hospital";
           String phone = element["tags"]?["phone"] ?? "No contact info";
-
-          // Manually assign known hospital numbers
-          if (name.contains("San Pedro")) {
-            phone = "09631879676";
-          }
-
-          loadedHospitals.add(
-            EmergencyLocation(
-              name: name,
-              latitude: lat,
-              longitude: lng,
-              phone: phone,
-              type: EmergencyLocationType.hospital,
-            ),
-          );
+          String website = element["tags"]?["website"] ?? "";
+          String address = element["tags"]?["addr:full"] ?? 
+                          (element["tags"]?["addr:street"] != null ? 
+                          "${element["tags"]?["addr:street"]} ${element["tags"]?["addr:housenumber"] ?? ''}" : 
+                          "Davao City");
+          String hours = element["tags"]?["opening_hours"] ?? "24/7";
+          
+          loadedHospitals.add(EmergencyLocation(
+            name: name,
+            latitude: lat,
+            longitude: lng,
+            phone: phone,
+            type: EmergencyLocationType.hospital,
+            address: address,
+            website: website,
+            operatingHours: hours,
+            description: "Emergency medical services available.",
+          ));
         }
-
+        
         return loadedHospitals;
       }
       return [];
@@ -73,6 +77,7 @@ class MapService extends StateNotifier<AsyncValue<List<EmergencyLocation>>> {
     }
   }
 
+  // Similar updates for fetchPoliceStations() method
   Future<List<EmergencyLocation>> fetchPoliceStations() async {
     const String overpassQuery = '''
       [out:json];
@@ -84,22 +89,22 @@ class MapService extends StateNotifier<AsyncValue<List<EmergencyLocation>>> {
       );
       out center;
     ''';
-
+  
     final Uri url = Uri.parse("https://overpass-api.de/api/interpreter?data=$overpassQuery");
-
+  
     try {
       final response = await http.get(url);
-
+  
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<EmergencyLocation> loadedPoliceStations = [];
-
+  
         for (var element in data["elements"]) {
           double lat = element["lat"] ?? element["center"]?["lat"] ?? 0.0;
           double lng = element["lon"] ?? element["center"]?["lon"] ?? 0.0;
           String name = element["tags"]?["name"] ?? "Unnamed Police Station";
           String phone = element["tags"]?["phone"] ?? "No contact info";
-
+  
           loadedPoliceStations.add(
             EmergencyLocation(
               name: name,
@@ -110,7 +115,7 @@ class MapService extends StateNotifier<AsyncValue<List<EmergencyLocation>>> {
             ),
           );
         }
-
+  
         return loadedPoliceStations;
       }
       return [];

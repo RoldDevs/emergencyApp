@@ -11,6 +11,10 @@ class EmergencyLocation {
   final double longitude;
   final String phone;
   final EmergencyLocationType type;
+  final String address;
+  final String description;
+  final String website;
+  final String operatingHours;
 
   EmergencyLocation({
     required this.name,
@@ -18,6 +22,10 @@ class EmergencyLocation {
     required this.longitude,
     required this.phone,
     required this.type,
+    this.address = '',
+    this.description = '',
+    this.website = '',
+    this.operatingHours = '',
   });
 
   factory EmergencyLocation.fromJson(Map<String, dynamic> json, EmergencyLocationType type) {
@@ -27,6 +35,10 @@ class EmergencyLocation {
       longitude: json['lng'] ?? 0.0,
       phone: json['phone'] ?? 'No contact info',
       type: type,
+      address: json['address'] ?? '',
+      description: json['description'] ?? '',
+      website: json['website'] ?? '',
+      operatingHours: json['operating_hours'] ?? '',
     );
   }
 }

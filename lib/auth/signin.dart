@@ -7,6 +7,7 @@ import 'package:emergency_app/components/custom_input_field.dart';
 import 'package:emergency_app/components/custom_button.dart';
 import 'package:emergency_app/providers/auth_service.dart';
 import 'package:emergency_app/utils/themes.dart';
+import 'package:emergency_app/providers/app_refresh_provider.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -36,19 +37,22 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         _isLoading = true;
         _errorMessage = null;
       });
-
+  
       final authService = ref.read(authServiceProvider.notifier);
       final error = await authService.signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
-
+  
       setState(() {
         _isLoading = false;
         _errorMessage = error;
       });
-
+  
       if (error == null && mounted) {
+        // Refresh the app to ensure UI updates properly
+        refreshApp(ref);
+        
         // Check if user is admin and navigate accordingly
         final user = ref.read(userProvider);
         final isAdmin = user != null && user.email == 'admin@emergency.app';

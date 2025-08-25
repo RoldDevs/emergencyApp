@@ -5,6 +5,7 @@ import 'package:emergency_app/pages/map.dart';
 import 'package:emergency_app/pages/profile.dart';
 import 'package:emergency_app/admin/emergency_dashboard.dart';
 import 'package:emergency_app/providers/notification_listener_service.dart';
+import 'package:emergency_app/providers/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emergency_app/components/bottom_nav_bar.dart';
@@ -18,7 +19,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:emergency_app/auth/signin.dart';
 
-// Add this to your main() function or where you initialize services
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -45,17 +45,17 @@ void main() async {
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
+  // In the MyApp class, modify the build method:
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the refresh provider to rebuild the app when it changes
-    ref.watch(appRefreshProvider);
+    final refreshCounter = ref.watch(appRefreshProvider);
     
     final currentUser = ref.watch(userProvider);
     final isAdmin = currentUser != null && currentUser.email == 'admin@emergency.app';
     
-    // No need to save player ID for local notifications
-    
     return MaterialApp(
+      key: Key('app-$refreshCounter'), // Add this key that changes when refreshCounter changes
       title: 'Emergency App',
       theme: AppTheme.lightTheme(),
       home: currentUser == null ? const SignInPage() : 
@@ -76,10 +76,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Check if this is the first login and show welcome modal if needed
+    // Check permissions and first login status
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPermissions();
       _checkFirstTimeLogin();
     });
+  }
+
+  Future<void> _checkPermissions() async {
+    final permissionService = ref.read(permissionServiceProvider.notifier);
+    final hasPermissions = await permissionService.checkPermissions();
+    
+    if (!hasPermissions && mounted) {
+      // Show permission dialog if permissions are not granted
+      permissionService.showPermissionDialog(context);
+    }
   }
 
   Future<void> _checkFirstTimeLogin() async {

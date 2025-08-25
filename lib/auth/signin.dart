@@ -1,6 +1,7 @@
 import 'package:emergency_app/admin/emergency_dashboard.dart';
 import 'package:emergency_app/auth/signup.dart';
 import 'package:emergency_app/main.dart';
+import 'package:emergency_app/providers/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emergency_app/components/custom_input_field.dart';
@@ -50,21 +51,34 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       });
   
       if (error == null && mounted) {
+        // Force clear any cached state
+        ref.invalidate(userProvider);
+        
         // Refresh the app to ensure UI updates properly
         refreshApp(ref);
         
-        // Check if user is admin and navigate accordingly
+        // Wait a moment for state to fully update
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        // Re-read the user to get fresh state
         final user = ref.read(userProvider);
         final isAdmin = user != null && user.email == 'admin@emergency.app';
         
+        // Request permissions after successful sign-in
+        final permissionService = ref.read(permissionServiceProvider.notifier);
+        await permissionService.requestAllPermissions();
+        
         // Replace the current screen instead of popping
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => isAdmin 
-              ? const EmergencyDashboard() 
-              : const MainScreen(),
-          ),
-        );
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => isAdmin 
+                ? const EmergencyDashboard() 
+                : const MainScreen(),
+            ),
+            (route) => false, // This removes all previous routes
+          );
+        }
       }
     }
   }

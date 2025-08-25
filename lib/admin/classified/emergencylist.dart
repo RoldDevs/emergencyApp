@@ -4,6 +4,7 @@ import 'package:emergency_app/utils/themes.dart';
 import 'package:emergency_app/models/emergency_notification.dart';
 import 'package:emergency_app/providers/emergency_notification_service.dart';
 import 'package:emergency_app/providers/map_navigation_provider.dart';
+import 'package:emergency_app/providers/admin_navigation_provider.dart';
 import 'package:intl/intl.dart';
 
 class EmergencyListScreen extends ConsumerWidget {
@@ -231,6 +232,7 @@ class EmergencyCard extends ConsumerWidget {
                         onPressed: () {
                           // Set the selected emergency and navigate to map
                           ref.read(selectedEmergencyProvider.notifier).state = emergency;
+                          ref.read(adminNavigationProvider.notifier).state = 1;
                         },
                         icon: const Icon(Icons.map, size: 16),
                         label: const Text('View on Map'),

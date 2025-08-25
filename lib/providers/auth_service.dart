@@ -8,6 +8,9 @@ class AuthService extends StateNotifier<app_models.User?> {
   final FirebaseFirestore _firestore;
 
   AuthService(this._firebaseAuth, this._firestore) : super(null) {
+    // Enable persistence
+    _firebaseAuth.setPersistence(firebase_auth.Persistence.LOCAL);
+    
     // Listen to auth state changes
     _firebaseAuth.authStateChanges().listen((firebase_auth.User? firebaseUser) {
       if (firebaseUser != null) {
@@ -128,7 +131,7 @@ class AuthService extends StateNotifier<app_models.User?> {
       }
     } catch (e) {
       print('Error updating user profile: $e');
-      throw e;
+      rethrow;
     }
   }
 }

@@ -13,6 +13,10 @@ class EmergencyScreen extends ConsumerWidget {
     final isCalling = ref.watch(isCallingProvider);
     final size = MediaQuery.of(context).size;
     
+    // Watch for any active cooldown
+    final isAnyCooldownActive = ref.watch(isAnyCooldownActiveProvider);
+    ref.watch(remainingCooldownSecondsProvider);
+    
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -46,10 +50,33 @@ class EmergencyScreen extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // Remove the custom gradient background and use the theme color
                     centerTitle: true,
                   ),
                 ),
+                
+                // Cooldown Status Bar (if active)
+                if (isAnyCooldownActive)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      color: Colors.amber.shade100,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.timer, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Every emergency is 1 minute interval, please wait, be safe and standby',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 
                 // Content
                 SliverToBoxAdapter(
@@ -66,7 +93,7 @@ class EmergencyScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color.fromRGBO(0, 0, 0, 0.5),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -93,11 +120,13 @@ class EmergencyScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 24),
+                        
+                        // Emergency buttons - removed color change for cooldown
                         EmergencyButton(
                           label: 'POLICE',
-                          color: Colors.blue.shade700,
+                          color: Colors.blue.shade700, // Always use original color
                           icon: Icons.local_police,
-                          onPressed: isCalling
+                          onPressed: (isCalling || ref.watch(isButtonInCooldownProvider(EmergencyType.police)))
                               ? null
                               : () => ref
                                   .read(emergencyServiceProvider.notifier)
@@ -105,9 +134,9 @@ class EmergencyScreen extends ConsumerWidget {
                         ),
                         EmergencyButton(
                           label: 'AMBULANCE',
-                          color: Colors.red.shade700,
+                          color: Colors.red.shade700, // Always use original color
                           icon: Icons.medical_services,
-                          onPressed: isCalling
+                          onPressed: (isCalling || ref.watch(isButtonInCooldownProvider(EmergencyType.ambulance)))
                               ? null
                               : () => ref
                                   .read(emergencyServiceProvider.notifier)
@@ -115,9 +144,9 @@ class EmergencyScreen extends ConsumerWidget {
                         ),
                         EmergencyButton(
                           label: 'FIRE',
-                          color: Colors.red.shade700,
+                          color: Colors.red.shade700, // Always use original color
                           icon: Icons.local_fire_department,
-                          onPressed: isCalling
+                          onPressed: (isCalling || ref.watch(isButtonInCooldownProvider(EmergencyType.fire)))
                               ? null
                               : () => ref
                                   .read(emergencyServiceProvider.notifier)
@@ -125,9 +154,9 @@ class EmergencyScreen extends ConsumerWidget {
                         ),
                         EmergencyButton(
                           label: 'FLOOD',
-                          color: Colors.orange.shade700,
+                          color: Colors.orange.shade700, // Always use original color
                           icon: Icons.water,
-                          onPressed: isCalling
+                          onPressed: (isCalling || ref.watch(isButtonInCooldownProvider(EmergencyType.flood)))
                               ? null
                               : () => ref
                                   .read(emergencyServiceProvider.notifier)
@@ -141,38 +170,43 @@ class EmergencyScreen extends ConsumerWidget {
               ],
             ),
             
-            // Loading overlay
+            // Loading indicator (non-modal)
             if (isCalling)
-              Container(
-                color: const Color.fromRGBO(0, 0, 0, 0.5),
+              Positioned(
+                bottom: 20,
+                left: 0,
+                right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: Column(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE53935)),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Connecting to emergency services.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE53935)),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(width: 12),
                         Text(
-                          'Please stay on this screen',
+                          'Sending Emergency Alert.',
                           style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
                           ),
                         ),
                       ],

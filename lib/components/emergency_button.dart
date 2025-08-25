@@ -16,9 +16,15 @@ class EmergencyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Define gradient colors based on button type
+    // Check if button is disabled
+    final bool isDisabled = onPressed == null;
+    
+    // In the EmergencyButton build method, update the gradient colors section
+    
+    // Define gradient colors based on button type and state
     List<Color> gradientColors;
     
+    // Always use the original colors, even when disabled
     if (label == 'POLICE') {
       gradientColors = [Colors.blue.shade700, Colors.white];
     } else if (label == 'AMBULANCE') {
@@ -33,7 +39,7 @@ class EmergencyButton extends StatelessWidget {
         color,
         color.withValues(alpha: 0.7),
       ];
-    }
+    } 
     
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -41,7 +47,9 @@ class EmergencyButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
+            color: isDisabled
+                ? Colors.grey.withValues(alpha: 0.3)
+                : color.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -80,7 +88,7 @@ class EmergencyButton extends StatelessWidget {
                     ),
                     child: Icon(
                       icon,
-                      color: color,
+                      color: isDisabled ? Colors.grey : color,
                       size: 28.0,
                     ),
                   ),
@@ -91,26 +99,28 @@ class EmergencyButton extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20.0,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: isDisabled ? Colors.grey.shade100 : Colors.white,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Tap to call',
+                        Text(
+                          isDisabled ? 'Temporarily disabled' : 'Tap to call',
                           style: TextStyle(
                             fontSize: 14.0,
-                            color: Color.fromRGBO(255, 255, 255, 0.9),
+                            color: isDisabled 
+                                ? Colors.grey.shade300 
+                                : const Color.fromRGBO(255, 255, 255, 0.9),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white,
+                    color: isDisabled ? Colors.grey.shade300 : Colors.white,
                     size: 16,
                   ),
                 ],

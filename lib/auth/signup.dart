@@ -1,3 +1,5 @@
+import 'package:emergency_app/main.dart';
+import 'package:emergency_app/providers/app_refresh_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emergency_app/components/custom_input_field.dart';
@@ -60,10 +62,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       // Then update the user profile in Firestore with additional information
       try {
         final firestore = ref.read(firestoreProvider);
-        // Replace this line
-        // final user = ref.read(authServiceProvider.notifier)._firebaseAuth.currentUser;
-        
-        // With this line instead
         final user = ref.read(firebaseAuthProvider).currentUser;
         
         if (user != null) {
@@ -77,12 +75,22 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             'address': _addressController.text.trim(),
           });
           
+          // Force clear any cached state
+          ref.invalidate(userProvider);
+          
+          // Refresh the app to ensure UI updates properly
+          refreshApp(ref);
+          
           setState(() {
             _isLoading = false;
           });
           
           if (mounted) {
-            Navigator.of(context).pop(); // Return to previous screen or navigate to home
+            // Navigate to main screen and clear all previous routes
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const MainScreen()),
+              (route) => false, // This removes all previous routes
+            );
           }
         } else {
           setState(() {
